@@ -1,10 +1,10 @@
 import { SUCCESS_VIEW_GRID } from '../actions';
 
-export const initializeState = {
+export const initialState = {
     viewGrid: []
 };
 
-export default (state = initializeState, action) =>{
+export default (state = initialState, action) =>{
     // console.log('reducer ' + state);
     switch(action.type){
         case SUCCESS_VIEW_GRID: 

@@ -10,6 +10,7 @@ function App() {
     <BrowserRouter>
       <DefaultLayout>
         <Switch>
+          <Route exact path="/table2" component={Pages.Table1} />
           <Route exact path="/table" component={Pages.AlgoTable} />
         </Switch>
       </DefaultLayout>
