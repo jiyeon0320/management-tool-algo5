@@ -5,7 +5,7 @@ import {Table, Input, Button, Form, DatePicker, Select} from 'antd';
 import styled from '@emotion/styled';
 // import axios from 'axios';
 import moment from 'moment';
-import { requestViewGrid } from '../modules/GridTest';
+import { requestViewGrid } from '../actions';
 
 const {Option} = Select;
 //셀 입력
