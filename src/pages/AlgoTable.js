@@ -1,10 +1,11 @@
 import React, {useEffect, useState, createContext, useRef, useContext} from 'react';
-// import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 // import { requestViewGrid } from '../actions';
 import {Table, Input, Button, Form, DatePicker, Select} from 'antd';
 import styled from '@emotion/styled';
-import axios from 'axios';
+// import axios from 'axios';
 import moment from 'moment';
+import { requestViewGrid } from '../modules/GridTest';
 
 const {Option} = Select;
 //셀 입력
@@ -112,20 +113,39 @@ const handleChange=(value)=>{
 }
 const AlgoTable = () => {
     const [data, setData] = useState(null);
-        
-    useEffect(() => {
-        const fetchData = async () =>{
-            try {
-                const response = await axios.post(
-                    'http://49.50.173.134:6373/table/view-grid', );
-                    setData(response.data.data);                
+
+    
+    const dispatch = useDispatch();
+    
+    
+    useEffect(()=>{
+        dispatch(requestViewGrid());
+    },[] );
+    const gridList = useSelector((state)=> state.gridList);
+    console.log(gridList);
+        // console.log();
+    
+
+
+
+
+
+    // useEffect(() => {
+    //     const fetchData = async () =>{
+    //         try {
+    //             const response = await axios.post(
+    //                 'http://49.50.173.134:6373/table/view-grid', );
+    //                 setData(response.data.data);                
                    
-            } catch (e) {
-                console.log(e);
-            }
-        };
-        fetchData();
-    },[]);
+    //         } catch (e) {
+    //             console.log(e);
+    //         }
+    //     };
+    //     fetchData();
+    // },[]);
+
+
+
 
     if(!data){
         return null;
@@ -162,20 +182,38 @@ const AlgoTable = () => {
     }
    
     //변경사항 저장 버튼 클릭
-    const handleSubmit =() =>{
-
+    const handleSubmit =(e) =>{
+        // useEffect(()=>{
+        //     const saveData = async ()=>{
+        //         try {
+        //             const res = await axios.post(
+        //                 'http://49.50.173.134:6373/table/update-grid',
+        //             );
+                    
+        //         } catch (e) {
+        //             console.log(e);
+        //         }
+        //     }
+        // });
     }
-
-
+    // const onSelectChange = (selectedRowKeys)=>{
+    //     console.log('selectedRowKeys changed: ' + selectedRowKeys);
+    //     set
+    // }
+    // const rowSelection = () =>{
+    //     selectedRowKeys,
+        // onChange: onSelectChange
+    // }
   
         return (
             <div>
                 <Button onClick={handleAdd} type="primary">데이터 추가</Button>
                 <StyledTable
                     columns={columns}
-                    dataSource={data}
+                    dataSource={gridList}
                     bordered
                     components={components}
+                    
                     >
                 </StyledTable>
                 <Button onClick={handleSubmit} type="primary">변경사항 저장</Button>

@@ -4,8 +4,8 @@ import * as Actions from '../actions/index';
 
 function* requestViewGridFlow(action){
     const response = yield call(Api.postViewGrid, action.payload);
-    yield put(Actions.successViewGrid(JSON.stringify(response.data)));
-
+    yield put(Actions.successViewGrid(response.data));
+    // console.log(response.data);
     // console.log('sagas >> '+ JSON.stringify(response.data));
 }
 

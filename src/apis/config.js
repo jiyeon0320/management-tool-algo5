@@ -4,5 +4,7 @@ const TABLE = 'table';
 
 const config = {
     viewGrid: `${DOMAIN}/${TABLE}/view-grid`,
+    updateGrid: `${DOMAIN}/${TABLE}/update-grid`,
 };
+
 export default config;
