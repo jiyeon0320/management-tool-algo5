@@ -35,7 +35,16 @@ const Table1 = () => {
         </tr>
         );
         
-          
+    const handleIdChange = (data) =>{
+        setData({
+            // ...data, : e.target.value
+        });
+        console.log(data)
+
+    }      
+    
+
+
     const addRow = (d,i)=>{
        let data = {
            i : item.length+1,
@@ -47,6 +56,7 @@ const Table1 = () => {
         setData([...item, data]);
         console.log(item.length);
     }
+
 
     return (
         <div>
@@ -78,7 +88,7 @@ const Table1 = () => {
                                   <option value="9">9</option>
                               </select>
                             </td>
-                          <td><input type="text" value={d.original_id}>
+                          <td><input type="text" value={d.original_id} onChange={handleIdChange}>
                           </input></td>
                           <td>{d.dailyno}</td>
                       </tr>

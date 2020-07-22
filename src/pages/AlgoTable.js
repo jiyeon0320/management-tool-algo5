@@ -1,17 +1,29 @@
 import React, {useEffect, useState, createContext, useRef, useContext} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-// import { requestViewGrid } from '../actions';
 import {Table, Input, Button, Form, DatePicker, Select} from 'antd';
 import styled from '@emotion/styled';
-// import axios from 'axios';
+import axios from 'axios';
 import moment from 'moment';
 import { requestViewGrid } from '../actions';
+
+
+/** 
+ *  사가로 데이터 불러오기.
+ *  화면에 출력이 제대로 되지 않음
+ *  axios로는 불러와짐
+ * 
+*/
+
+
+
+
 
 const {Option} = Select;
 //셀 입력
 const EditableContext = createContext();
 const dateFormat = 'YYYY-MM-DD';
 
+//데이터 수정
 const EditableRow = ({index, ...props}) =>{
     const [form] = Form.useForm();
     return(
@@ -42,11 +54,13 @@ const EditableCell = ({
         }
     }, [editing]);
 
+    //더블클릭하면 텍스트 수정 가능하게 함
     const toggleEdit = () =>{
         setEditing(!editing);
         form.setFieldValue({
             [dataIndex]: record[dataIndex],
         });
+        console.log('tt');
     };
 
     const save = async e =>{
@@ -67,11 +81,17 @@ const EditableCell = ({
                 <Input ref={inputRef} onPressEnter={save} onBlur={save} />
             </Form.Item>
         ):(
-            <div className="editable-cell-value-wrap" onClick={toggleEdit}>{children}</div>
+            <div onClick={toggleEdit}>{children}</div>
         );
     }
     return <td {...restProps}>{childNode}</td>
 };
+
+
+
+
+
+
 
 const columns =[
     {
@@ -108,41 +128,30 @@ const columns =[
         align: 'center'
     },
 ];
+const components = {
+    body:{
+        row: EditableRow,
+        cell: EditableCell,
+    },
+};
 const handleChange=(value)=>{
     console.log(value);
 }
 const AlgoTable = () => {
     const [data, setData] = useState(null);
-
-    
-    const dispatch = useDispatch();
-    
-    
-    useEffect(()=>{
-        dispatch(requestViewGrid());
-    },[] );
-    const gridList = useSelector((state)=> state.gridList);
-    console.log(gridList);
-        // console.log();
-    
-
-
-
-
-
-    // useEffect(() => {
-    //     const fetchData = async () =>{
-    //         try {
-    //             const response = await axios.post(
-    //                 'http://49.50.173.134:6373/table/view-grid', );
-    //                 setData(response.data.data);                
-                   
-    //         } catch (e) {
-    //             console.log(e);
-    //         }
-    //     };
-    //     fetchData();
-    // },[]);
+   
+    useEffect(() => {
+        const fetchData = async () =>{
+            try {
+                const response = await axios.post(
+                    'http://49.50.173.134:6373/table/view-grid', );
+                    setData(response.data.data);                 
+            } catch (e) {
+                console.log(e);
+            }
+        };
+        fetchData();
+    },[]);
 
 
 
@@ -151,12 +160,7 @@ const AlgoTable = () => {
         return null;
     }
 
-    const components = {
-        body:{
-            row: EditableRow,
-            cell: EditableCell,
-        },
-    };
+
     
 
     //변경된 데이터 저장
@@ -180,6 +184,7 @@ const AlgoTable = () => {
         setData(...data, newData);
 
     }
+    
    
     //변경사항 저장 버튼 클릭
     const handleSubmit =(e) =>{
@@ -210,10 +215,9 @@ const AlgoTable = () => {
                 <Button onClick={handleAdd} type="primary">데이터 추가</Button>
                 <StyledTable
                     columns={columns}
-                    dataSource={gridList}
+                    dataSource={data}
                     bordered
                     components={components}
-                    
                     >
                 </StyledTable>
                 <Button onClick={handleSubmit} type="primary">변경사항 저장</Button>
