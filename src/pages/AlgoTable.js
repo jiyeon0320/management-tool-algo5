@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, {useEffect, useState, createContext, useRef, useContext} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {Table, Input, Button, Form, DatePicker, Select} from 'antd';
@@ -101,7 +102,7 @@ const columns =[
         align: 'center',
         editable: true,
         render: (date) =>
-            <DatePicker defaultValue={moment(date, dateFormat)} />   
+            <DatePicker defaultValue={moment(date, dateFormat)} dateFormat={dateFormat} />   
     },
     {
         title: '학년',
@@ -138,13 +139,14 @@ const handleChange=(value)=>{
     console.log(value);
 }
 const AlgoTable = () => {
-    const [data, setData] = useState(null);
+   const [data, setData] = useState(null);
+   
    
     useEffect(() => {
         const fetchData = async () =>{
             try {
                 const response = await axios.post(
-                    'http://49.50.173.134:6373/table/view-grid', );
+                    'http://localhost:6373/table/view-grid', );
                     setData(response.data.data);                 
             } catch (e) {
                 console.log(e);
@@ -153,35 +155,37 @@ const AlgoTable = () => {
         fetchData();
     },[]);
 
-
-
-
     if(!data){
         return null;
     }
 
 
     
-
-    //변경된 데이터 저장
-    // const handleSave = row =>{
-    //     const newData = [...data.data];
-    //     const index = newData.findIndex(item => data.data.dailyno === item.key);
-    //     const item = newData[index];
-    // }
-
     //데이터 추가 버튼 클릭
     const handleAdd =() =>{
     console.log(data.length);
-
-        const newData ={
-            key: data.length+1,
-            dailyno: "",
-            study_date: "",
-            grade: "",
-            original_id: "dd",
-        }
-        setData(...data, newData);
+    
+    // const newData ={
+    //     key: data.length+1,
+    //     dailyno: "",
+    //     study_date: "",
+    //     grade: "",
+    //     original_id: "dd",
+    // }
+    
+        const fetchData = async () =>{
+            try {
+                const response = await axios.post(
+                    'http://localhost:6373/table/update-grid', );
+                    setData(response.data.data);                 
+                    console.log('api go');
+                } catch (e) {
+                    console.log(e);
+                }
+            };
+            fetchData();
+       
+        
 
     }
     
