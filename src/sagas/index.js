@@ -9,7 +9,11 @@ function* requestViewGridFlow(action){
 }
 
 function* requestUpdateGridFlow(action){
+    console.log('saga 진입');
     const {result} = yield call(Api.postUpdateGrid, action.payload);
+    console.log('saga 진입'+ result);
+    
+
     if(result === 1){
         yield put(Actions.successUpdateGrid(result));
         console.log('update 성공!');

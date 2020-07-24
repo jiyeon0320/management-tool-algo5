@@ -25,6 +25,10 @@ export const requestUpdateGrid = ({study_date, grade, original_id, trim_date, da
     type: REQUEST_UPDATE_GRID,
     payload: {study_date, grade, original_id, trim_date, dailyno, stat},
 });
+// export const requestUpdateGrid = ({dailyno, insertData}) => ({
+//     type: REQUEST_UPDATE_GRID,
+//     payload: {dailyno, insertData},
+// });
 export const successUpdateGrid = (data)=>({
     type: SUCCESS_UPDATE_GRID,
     payload: data
