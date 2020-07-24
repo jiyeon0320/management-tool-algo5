@@ -14,7 +14,7 @@ function* requestUpdateGridFlow(action){
     console.log('saga 진입'+ result);
     
 
-    if(result === 1){
+    if(result === undefined){
         yield put(Actions.successUpdateGrid(result));
         console.log('update 성공!');
     } else{

@@ -48,11 +48,12 @@ const Table1 = () => {
     //데이터 삭제
     const handleDelete =(d) =>{
         console.log(d.target.value);
+        setStat("D");
         setDailyno(Number(d.target.value));
     }
     const confirm=()=>{
-        dispatch(requestUpdateGrid({dailyno}));
-        console.log(dailyno);
+        dispatch(requestUpdateGrid({dailyno, stat}));
+        console.log(`번호: ${dailyno} / 상태: ${stat}`);
         message.success('삭제 성공');
     }
     const cancel=()=>{
