@@ -60,7 +60,18 @@ const Table1 = () => {
         message.error('삭제 취소');
     }
 
-
+    const chkClick =(e) =>{
+        setDailyno(e.target.value);
+        setStudy_date(e.target.value);
+        setOriginal_id(e.target.value);
+        setGrade(e.target.value);
+        // setStat();
+        console.log({study_date, grade, original_id, dailyno});
+    }
+    // 내용 수정
+    const dataChange =(e)=>{
+        setOriginal_id(e.target.value);
+    }
     
     //모달 ok 버튼 누르기
     const handleOk=()=>{
@@ -100,7 +111,7 @@ const Table1 = () => {
                         <option value="8">8</option>  
                         <option value="9">9</option>  
                     </select>
-                    <Input placeholder="내용" value={original_id} onChange={(e)=> setOriginal_id(e.target.value)} />
+                    <Input placeholder="내용" value={original_id} onChange={dataChange} />
                 </Input.Group>
             </Modal>
 
@@ -119,6 +130,7 @@ const Table1 = () => {
                   {viewGrid.map((d, i)=>(
                       <tr key = {i}>
                           {/* <td>{i}</td> */}
+                          <td><input type="checkbox" value={d.dailyno} onClick={chkClick}/></td>
                           <td>
                               <DatePicker defaultValue={moment(d.study_date, dateFormat)} onChange={handleDate}>
                               </DatePicker>

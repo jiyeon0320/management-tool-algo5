@@ -1,96 +1,52 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, {useEffect, useState, createContext, useRef, useContext} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {Table, Input, Button, Form, DatePicker, Select} from 'antd';
+import {Table, Input, Button, Form, DatePicker, Select, Pagination} from 'antd';
 import styled from '@emotion/styled';
-import axios from 'axios';
 import moment from 'moment';
 import { requestViewGrid } from '../actions';
 
-
-/** 
- *  사가로 데이터 불러오기.
- *  화면에 출력이 제대로 되지 않음
- *  axios로는 불러와짐
- * 
-*/
-
-
-
-
-
 const {Option} = Select;
+
 //셀 입력
-const EditableContext = createContext();
+// const EditableContext = createContext();
 const dateFormat = 'YYYY-MM-DD';
 
-//데이터 수정
-const EditableRow = ({index, ...props}) =>{
-    const [form] = Form.useForm();
-    return(
-        <Form form={form} component={false}>
-            <EditableContext.Provider value={form}>
-                <tr {...props} />
-            </EditableContext.Provider>
-        </Form>
-    )
-}
 
 const EditableCell = ({
-    DatePicker,
-    title, 
-    editable,
-    children,
+    editing,
     dataIndex,
+    title,
+    inputType,
     record,
-    handleSubmit,
+    index,
+    children,
     ...restProps
-}) =>{
-    const [editing, setEditing] = useState(false);
-    const inputRef = useRef();
-    const form =useContext(EditableContext);
-    useEffect(() =>{
-        if (editing){
-            inputRef.current.focus();
-        }
-    }, [editing]);
-
-    //더블클릭하면 텍스트 수정 가능하게 함
-    const toggleEdit = () =>{
-        setEditing(!editing);
-        form.setFieldValue({
-            [dataIndex]: record[dataIndex],
-        });
-        console.log('tt');
-    };
-
-    const save = async e =>{
-        try {
-            const values = await form.validateFields();
-            toggleEdit();
-            handleSubmit({...record, ...values});
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-    let childNode = children;
-
-    if(editable){
-        childNode = editing?(
-            <Form.Item name={dataIndex} rules={[{required: true, message:`${title} is required.`,},]}>
-                <Input ref={inputRef} onPressEnter={save} onBlur={save} />
-            </Form.Item>
-        ):(
-            <div onClick={toggleEdit}>{children}</div>
-        );
-    }
-    return <td {...restProps}>{childNode}</td>
-};
-
-
-
-
+  }) => {
+    const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
+    return (
+      <td {...restProps}>
+        {editing ? (
+          <Form.Item
+            name={dataIndex}
+            style={{
+              margin: 0,
+            }}
+            rules={[
+              {
+                required: true,
+                message: `Please Input ${title}!`,
+              },
+            ]}
+          >
+            {inputNode}
+          </Form.Item>
+        ) : (
+          children
+        )}
+      </td>
+    );
+  };
 
 
 
@@ -98,11 +54,10 @@ const columns =[
     {
         title: '등록일자',
         dataIndex: 'study_date',
-        key: 'dailyno',
         align: 'center',
         editable: true,
         render: (date) =>
-            <DatePicker defaultValue={moment(date, dateFormat)} dateFormat={dateFormat} />   
+            <DatePicker defaultValue={moment(date, dateFormat)} format={dateFormat} />   
     },
     {
         title: '학년',
@@ -128,43 +83,94 @@ const columns =[
         dataIndex: 'dailyno',
         align: 'center'
     },
+    {
+        title: 'operation',
+        dataIndex: 'operation',
+        render: (_, record) => {
+          const editable = isEditing(record);
+          return editable ? (
+            <span>
+              <a
+                href="javascript:;"
+                onClick={() => save(record.key)}
+                style={{
+                  marginRight: 8,
+                }}
+              >
+                Save
+              </a>
+              <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+                <a>Cancel</a>
+              </Popconfirm>
+            </span>
+          ) : (
+            <a disabled={editingKey !== ''} onClick={() => edit(record)}>
+              Edit
+            </a>
+          );
+        },
+      },
 ];
-const components = {
-    body:{
-        row: EditableRow,
-        cell: EditableCell,
-    },
-};
+const isEditing = record => record.key === editingKey;
+const mergedColumns = columns.map(col => {
+    if (!col.editable) {
+      return col;
+    }
+
+    return {
+      ...col,
+      onCell: record => ({
+        record,
+        dataIndex: col.dataIndex,
+        title: col.title,
+        editing: isEditing(record),
+      }),
+    };
+  });
+
 const handleChange=(value)=>{
     console.log(value);
 }
+
+
+//메인 메서드
 const AlgoTable = () => {
    const [data, setData] = useState(null);
+   const [visible, setVisible] = useState(false);
+   const [study_date, setStudy_date] = useState();
+   const [grade, setGrade] = useState();
+   const [original_id, setOriginal_id] = useState();
+   const [dailyno, setDailyno] = useState();
+   const [stat, setStat] = useState();
+   const [editingKey, setEditingKey] = useState('');
+   const viewGrid = useSelector((state) => state.viewGrid);    //기존 데이터 출력
+   const dispatch = useDispatch();
    
+   //데이터 출력하기
+   useEffect(()=>{
+       dispatch(requestViewGrid({}), setData(viewGrid));
+   },[dispatch]);
    
-    useEffect(() => {
-        const fetchData = async () =>{
-            try {
-                const response = await axios.post(
-                    'http://localhost:6373/table/view-grid', );
-                    setData(response.data.data);                 
-            } catch (e) {
-                console.log(e);
-            }
-        };
-        fetchData();
-    },[]);
+   const dataCount = viewGrid.length;
+   console.log(dataCount);    //데이터 개수
 
-    if(!data){
-        return null;
-    }
+   const edit = record =>{
+       form.setFieldsValue({
+        study_date: '',
+        grade:'',
+        original_id:''
+       });
+       setDailyno(e.target.value);
+       setEditingKey(record.key);
+   }
 
 
-    
-    //데이터 추가 버튼 클릭
+
+
+   
+    // //데이터 추가 버튼 클릭
     const handleAdd =() =>{
-    console.log(data.length);
-    
+       
     // const newData ={
     //     key: data.length+1,
     //     dailyno: "",
@@ -173,37 +179,13 @@ const AlgoTable = () => {
     //     original_id: "dd",
     // }
     
-        const fetchData = async () =>{
-            try {
-                const response = await axios.post(
-                    'http://localhost:6373/table/update-grid', );
-                    setData(response.data.data);                 
-                    console.log('api go');
-                } catch (e) {
-                    console.log(e);
-                }
-            };
-            fetchData();
        
-        
-
     }
     
    
     //변경사항 저장 버튼 클릭
     const handleSubmit =(e) =>{
-        // useEffect(()=>{
-        //     const saveData = async ()=>{
-        //         try {
-        //             const res = await axios.post(
-        //                 'http://49.50.173.134:6373/table/update-grid',
-        //             );
-                    
-        //         } catch (e) {
-        //             console.log(e);
-        //         }
-        //     }
-        // });
+       console.log('저장');
     }
     // const onSelectChange = (selectedRowKeys)=>{
     //     console.log('selectedRowKeys changed: ' + selectedRowKeys);
@@ -213,18 +195,29 @@ const AlgoTable = () => {
     //     selectedRowKeys,
         // onChange: onSelectChange
     // }
+
+    //페이징
+    const cancel = () => {
+        setEditingKey('');
+      };
   
         return (
             <div>
                 <Button onClick={handleAdd} type="primary">데이터 추가</Button>
-                <StyledTable
-                    columns={columns}
-                    dataSource={data}
-                    bordered
-                    components={components}
-                    >
-                </StyledTable>
                 <Button onClick={handleSubmit} type="primary">변경사항 저장</Button>
+                <StyledTable
+                    columns={mergedColumns}
+                    dataSource={viewGrid}
+                    bordered
+                    components={{
+                        body: {
+                          cell: EditableCell,
+                        },
+                      }}
+                    pagination={{
+                        onChange: cancel
+                      }}
+                />
             </div>
         );
     };
@@ -234,4 +227,4 @@ const AlgoTable = () => {
 const StyledTable = styled(Table)`
 padding: 50px 50px;
 `;
-    export default AlgoTable;
+export default AlgoTable;
