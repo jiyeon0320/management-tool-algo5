@@ -6,6 +6,7 @@ import styled from '@emotion/styled';
 import moment from 'moment';
 import { requestUpdateGrid, requestViewGrid } from '../actions';
 
+//****** edit 셀을 더블클릭하면 되게 한다.  */
 
 /*
 ## goal
@@ -29,44 +30,87 @@ const {Option} = Select;
 const dateFormat = 'YYYY-MM-DD';
 
 
+const EditableContext = React.createContext();
 
-
-const EditableCell = ({
-  editing,
-  dataIndex,
-  title,
-  inputType,
-  dailyno,
-  index,
-  children,
-  ...restProps
-}) => {
-  const inputNode = inputType === 'grade' ? <InputNumber /> : <Input />;
+const EditableRow = ({ index, ...props }) => {
+  const [form] = Form.useForm();
   return (
-    <td {...restProps}>
-      {editing ? (
-        <Form.Item
-          name={dataIndex}
-          style={{
-            margin: 0,
-          }}
-          rules={[
-            {
-              required: true,
-              message: `Please Input ${title}!`,
-            },
-          ]}
-        >
-          {inputNode}
-        </Form.Item>
-      ) : (
-        children
-      )}
-    </td>
+    <Form form={form} component={false}>
+      <EditableContext.Provider value={form}>
+        <tr {...props} />
+      </EditableContext.Provider>
+    </Form>
   );
 };
 
+const EditableCell = ({
+  title,
+  editable,
+  children,
+  dataIndex,
+  dailyno,
+  handleSave,
+  ...restProps
+}) => {
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef();
+  const form = useContext(EditableContext);
+  useEffect(() => {
+    if (editing) {
+      inputRef.current.focus();
+    }
+  }, [editing]);
 
+  const toggleEdit = () => {
+    setEditing(!editing);
+    form.setFieldsValue({
+      [dataIndex]: dailyno[dataIndex],
+    });
+  };
+
+  const save = async e => {
+    try {
+      const values = await form.validateFields();
+      toggleEdit();
+      handleSave({ ...dailyno, ...values });
+    } catch (errInfo) {
+      console.log('Save failed:', errInfo);
+    }
+  };
+
+  let childNode = children;
+
+  if (editable) {
+    childNode = editing ? (
+      <Form.Item
+        style={{
+          margin: 0,
+        }}
+        name={dataIndex}
+        rules={[
+          {
+            required: true,
+            message: `${title} is required.`,
+          },
+        ]}
+      >
+        <Input ref={inputRef} onPressEnter={save} onBlur={save} />
+      </Form.Item>
+    ) : (
+      <div
+        className="editable-cell-value-wrap"
+        style={{
+          paddingRight: 24,
+        }}
+        onClick={toggleEdit}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  return <td {...restProps}>{childNode}</td>;
+};
 
 //메인 메서드
 const AlgoTable = () => {
@@ -153,12 +197,11 @@ const ecancel =()=>{
   setDailyno('');
 }
 const onEditSave = async dailyno =>{
-  console.log(dailyno);
   try {
     const row = await form.validateFields();
     const newData = [...data];
     const index = newData.findIndex(item => dailyno === item.dailyno);
-console.log(index);
+
     if (index > -1) {
       const item = newData[index];
       newData.splice(index, 1, { ...item, ...row });
@@ -204,21 +247,12 @@ console.log(index);
           dataIndex: 'study_date',
           align: 'center',
           editable: true,
-          // render: (date) =>
-          //     <DatePicker defaultValue={moment(date, dateFormat)} format={dateFormat} />   
       },
       {
           title: '학년',
           dataIndex: 'grade',
           align: 'center',
           editable: true,
-          // render: (grade)=>
-          //     <Select labelInValue defaultValue={{value: grade}}
-          //         onChange={handleChange}>
-          //             <Option value="7">7</Option>
-          //             <Option value="8">8</Option>
-          //             <Option value="9">9</Option>
-          //         </Select>
       },
       {
           title: '내용',
@@ -234,20 +268,7 @@ console.log(index);
       {
           title: '수정',
           dataIndex: 'dailyno',
-          align: 'center',
-          render: (dailyno) => {
-            const editable = isEditing;
-            console.log(isEditing);
-            return editable ? (
-              <span>
-                <button value={dailyno} onClick={onEditSave}>저장</button>
-                <Popconfirm title="Sure to cancel?" onConfirm={ecancel}><button>취소</button></Popconfirm>
-              </span>
-            ) : (
-              <button value={dailyno} onClick={handleEdit}>수정</button>
-            )
-          } 
-            
+          align: 'center',           
       },
       {
           title: '삭제',
@@ -264,22 +285,6 @@ console.log(index);
       },
       
   ];
-  //셀 실시간 수정 되게-input
-  const mergedColumns = columns.map(row => {
-    if(!row.editable){
-      return row;
-    }
-    return {
-      ...row,
-      onCell: dailyno =>({
-        dailyno,
-        inputType: row.dataIndex === 'grade'?'number':'text',
-        dataIndex: row.dataIndex,
-        title: row.title,
-        editing: isEditing,
-      }),
-    };
-  });
 
  
         return (
@@ -307,14 +312,11 @@ console.log(index);
                 {/* <Button onClick={handleSubmit} type="primary">변경사항 저장</Button> */}
                 <Form form={form} component={false}>
                   <StyledTable
-                      columns={mergedColumns}
+                      columns={columns}
                       dataSource={viewGrid}
                       bordered
-                      components={{
-                        body: {
-                          cell: EditableCell,
-                        },
-                      }}
+                      rowClassName={() => 'editable-row'}
+                      components={components}
                       pagination={{
                         onChange: ecancel
                       }}

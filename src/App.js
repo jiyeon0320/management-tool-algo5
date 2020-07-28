@@ -12,6 +12,7 @@ function App() {
         <Switch>
           <Route exact path="/" component={Pages.AlgoTable} />
           <Route exact path="/table" component={Pages.Table1} />
+          <Route exact path="/table2" component={Pages.Table2} />
           <Route exact path="/table3" component={Pages.AlgoTable2} />
         </Switch>
       </DefaultLayout>

@@ -7,7 +7,6 @@ import moment from 'moment';
 import { requestUpdateGrid, requestViewGrid } from '../actions';
 
 const dateFormat = 'YYYY-MM-DD';
-let listCount = 0;
 
 const Table1 = () => {
     const [data, setData] = useState(null);
@@ -19,6 +18,7 @@ const Table1 = () => {
     const [stat, setStat] = useState();
     const viewGrid = useSelector((state) => state.viewGrid);    //데이터 출력
 
+    const [rows, setRows] = useState([]);
     const dispatch = useDispatch();
     console.log(viewGrid);
 
@@ -83,12 +83,26 @@ const Table1 = () => {
         console.log({study_date, grade, original_id, stat});
         console.log(insertData.length);
         setVisible(false);
-        listCount++;
     }
 
     const handleCancle=()=>{
         console.log('모달 데이터 입력 취소');
         setVisible(false);
+    }
+    const onChange = id => e => {
+        console.log(id);
+        const{
+            target: {value}
+        } =e;
+ 
+        const tempRows = viewGrid.map(row=>{
+            console.log(row.id);
+            if(row.id ===  id +1){
+                row["original_id"] = value;
+            }
+            return row;
+        });
+        setRows(tempRows);
     }
         
     
@@ -143,7 +157,7 @@ const Table1 = () => {
                         <option value="9">9</option>  
                     </select>
                             </td>
-                          <td><input type="text" key={i} value={d.original_id} onChange={(e)=>setOriginal_id(e.target.value)}>
+                          <td><input type="text" key={i} value={d.original_id} onChange={onChange(d)}>
                           </input></td>
                           <td>{d.dailyno}</td>
                           <td><Popconfirm

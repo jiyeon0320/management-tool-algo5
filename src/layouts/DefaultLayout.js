@@ -11,7 +11,7 @@ const {Content, Sider, Footer, Header}  =  Layout;
 const DefaultLayout = ({children}) => {
     return (
         <Layout style={{ minHeight: '100vh' }}>
-            <Sider></Sider>
+            <Sider />
             <Layout>
                 <Header></Header>
                 <Content>{children}</Content>
