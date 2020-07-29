@@ -46,6 +46,7 @@ const EditableContext = React.createContext();
 
 const EditableRow = ({ index, ...props }) => {
   const [form] = Form.useForm();
+  console.log(form);
   return (
     <Form form={form} component={false}>
       <EditableContext.Provider value={form}>
@@ -53,6 +54,117 @@ const EditableRow = ({ index, ...props }) => {
       </EditableContext.Provider>
     </Form>
   );
+};
+
+// 데이터 수정하기
+const EditableCell = ({
+  dailyno,
+  grade,
+  original_id,
+  title,
+  editable,
+  children,
+  dataIndex,
+  handleSave,
+  ...restProps
+}) => {
+  const [editing, setEditing] = useState(false);
+  // const inputRef = useRef();
+  const form = useContext(EditableContext);
+  console.log(dailyno);
+  console.log(grade);
+  console.log(original_id);
+
+  //객체가 출력됨
+  // useEffect(() => {
+  //   if (editing) {
+  //     inputRef.current.focus();
+  //   }
+  // }, [editing]);
+
+  //클릭으로 데이터 수정 가능하게 하는 기능
+  const toggleEdit = (stat) => {
+    console.log(dataIndex);
+    console.log(dailyno);
+
+    setEditing(!editing);
+    // setStat('U');
+    form.setFieldsValue({
+      [dataIndex]: dailyno[dataIndex],
+    });
+  };
+
+  const save = async (e) => {
+    try {
+      const values = await form.validateFields();
+      console.log(values);
+      toggleEdit();
+      handleSave({ ...dailyno, ...values });
+    } catch (errInfo) {
+      console.log('Save failed:', errInfo);
+    }
+  };
+
+  let childNode = children;
+
+  if (editable) {
+    childNode = editing ? (
+      <Form.Item
+        style={{
+          margin: 0,
+        }}
+        name={dataIndex}
+        rules={[
+          {
+            required: true,
+            message: `${title} is required.`,
+          },
+        ]}
+      >
+        {dataIndex === 'study_date' && (
+          <DatePicker
+            // defaultValue={moment(study_date, dateFormat)}
+            format={dateFormat}
+            // onChange={handleDate}
+            onBlur={save}
+            onPressEnter={save}
+          />
+        )}
+        {dataIndex === 'grade' && (
+          <Select
+            labelInValue
+            // defaultValue={grade}
+            // onChange={handleGrade}
+          >
+            <Option>학년</Option>
+            <Option value="7">7</Option>
+            <Option value="8">8</Option>
+            <Option value="9">9</Option>
+          </Select>
+        )}
+        {dataIndex === 'original_id' && (
+          <Input
+            value={original_id}
+            onPressEnter={save}
+            onBlur={save}
+            // onChange={dataChange}
+          />
+        )}
+      </Form.Item>
+    ) : (
+      <div
+        className="editable-cell-value-wrap"
+        style={{
+          paddingRight: 24,
+        }}
+        onClick={toggleEdit}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  return <td {...restProps}>{childNode}</td>;
 };
 
 //메인 메서드
@@ -129,6 +241,9 @@ const AlgoTable = () => {
     setData({
       dataIndex: newData,
     });
+    dispatch(
+      requestUpdateGrid({ study_date, grade, original_id, stat, dailyno })
+    );
   };
 
   //삭제
@@ -146,109 +261,6 @@ const AlgoTable = () => {
   const cancel = () => {
     message.error('삭제 취소');
     setVisible(false);
-  };
-
-  // 데이터 수정하기
-  const EditableCell = ({
-    dailyno,
-    title,
-    editable,
-    children,
-    dataIndex,
-    handleSave,
-    ...restProps
-  }) => {
-    const [editing, setEditing] = useState(false);
-    // const inputRef = useRef();
-    const form = useContext(EditableContext);
-
-    //객체가 출력됨
-    // console.log(dailyno);
-    // useEffect(() => {
-    //   if (editing) {
-    //     inputRef.current.focus();
-    //   }
-    // }, [editing]);
-
-    //클릭으로 데이터 수정 가능하게 하는 기능
-    const toggleEdit = () => {
-      setEditing(!editing);
-      form.setFieldsValue({
-        [dataIndex]: dailyno[dataIndex],
-      });
-    };
-
-    const save = async (e) => {
-      try {
-        const values = await form.validateFields();
-        console.log(values);
-        toggleEdit();
-        handleSave({ ...dailyno, ...values });
-      } catch (errInfo) {
-        console.log('Save failed:', errInfo);
-      }
-    };
-
-    let childNode = children;
-
-    if (editable) {
-      childNode = editing ? (
-        <Form.Item
-          style={{
-            margin: 0,
-          }}
-          name={dataIndex}
-          rules={[
-            {
-              required: true,
-              message: `${title} is required.`,
-            },
-          ]}
-        >
-          {dataIndex === 'study_date' && (
-            <DatePicker
-              defaultValue={moment(study_date, dateFormat)}
-              format={dateFormat}
-              onChange={handleDate}
-              onBlur={save}
-              onPressEnter={save}
-            />
-          )}
-          {dataIndex === 'grade' && (
-            <Select
-              labelInValue
-              // defaultValue={grade}
-              onChange={handleGrade}
-            >
-              <Option>학년</Option>
-              <Option value="7">7</Option>
-              <Option value="8">8</Option>
-              <Option value="9">9</Option>
-            </Select>
-          )}
-          {dataIndex === 'original_id' && (
-            <Input
-              value={original_id}
-              onPressEnter={save}
-              onBlur={save}
-              onChange={dataChange}
-            />
-          )}
-        </Form.Item>
-      ) : (
-        <div
-          className="editable-cell-value-wrap"
-          style={{
-            paddingRight: 24,
-          }}
-          onClick={toggleEdit}
-        >
-          {children}
-        </div>
-      );
-    }
-
-    return <td {...restProps}>{childNode}</td>;
   };
 
   const columns = useMemo(
@@ -296,7 +308,7 @@ const AlgoTable = () => {
         ),
       },
     ],
-    [EditableRow]
+    [EditableRow, EditableCell]
   );
   //수정된 컬럼명을 맵 돌려서 확인
   const mergedColumns = columns.map((col) => {
@@ -359,7 +371,7 @@ const AlgoTable = () => {
         }}
         rowClassName={() => 'editable-row'}
         pagination={{
-          onChange: true,
+          onChange: false,
         }}
       />
     </div>
