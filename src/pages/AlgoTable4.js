@@ -42,10 +42,14 @@ import { requestUpdateGrid, requestViewGrid } from '../actions';
 const { Option } = Select;
 const dateFormat = 'YYYY-MM-DD';
 
-const EditableContext = React.createContext();
+const EditableContext = createContext();
 
 const EditableRow = ({ index, ...props }) => {
+  console.log(index);
   const [form] = Form.useForm();
+  console.log(form);
+  // dispatch(requestUpdateGrid({ study_date, grade, original_id, stat }));
+
   return (
     <Form form={form} component={false}>
       <EditableContext.Provider value={form}>
@@ -57,101 +61,36 @@ const EditableRow = ({ index, ...props }) => {
 
 const EditableCell = ({
   dailyno,
-  title,
-  editable,
-  children,
+  editing,
   dataIndex,
-  handleSave,
+  title,
+  inputType,
+  index,
+  children,
   ...restProps
 }) => {
-  const [editing, setEditing] = useState(false);
-  // const inputRef = useRef();
-  const form = useContext(EditableContext);
-
-  //객체가 출력됨
-  // console.log(dailyno);
-  useEffect(() => {
-    if (editing) {
-      inputRef.current.focus();
-    }
-  }, [editing]);
-
-  //클릭으로 데이터 수정 가능하게 하는 기능
-  const toggleEdit = () => {
-    setEditing(!editing);
-    form.setFieldsValue({
-      [dataIndex]: dailyno[dataIndex],
-    });
-  };
-
-  const save = async (e) => {
-    try {
-      const values = await form.validateFields();
-      toggleEdit();
-      handleSave({ ...dailyno, ...values });
-    } catch (errInfo) {
-      console.log('Save failed:', errInfo);
-    }
-  };
-
-  let childNode = children;
-  let inputDate = (study_date) => (
-    <DatePicker
-      defaultValue={moment(study_date, dateFormat)}
-      format={dateFormat}
-    />
-  );
-  if (editable) {
-    childNode = editing ? (
-      <Form.Item
-        style={{
-          margin: 0,
-        }}
-        name={dataIndex}
-        rules={[
-          {
-            required: true,
-            message: `${title} is required.`,
-          },
-        ]}
-      >
-        {/*         
-        /*** 1째 칸은{' '}
-        <DatePicker
-          defaultValue={moment(study_date, dateFormat)}
-          ref={inputRef}
-          format={dateFormat}
-          onBlur={save}
-          onPressEnter={save}
-        />
-        2번째는 
-        <Select
-          labelInValue
-          defaultValue={{ value: grade }}
-          ref={inputRef}
-          onChange={handleGrade}
+  return (
+    <td {...restProps}>
+      {editing ? (
+        <Form.Item
+          name={dataIndex}
+          style={{
+            margin: 0,
+          }}
+          rules={[
+            {
+              required: true,
+              message: `Please Input ${title}!`,
+            },
+          ]}
         >
-          <Option value="7">7</Option>
-          <Option value="8">8</Option>
-          <Option value="9">9</Option>
-        </Select>
-        3번째는
-        <Input ref={inputRef} onPressEnter={save} onBlur={save} /> */}
-      </Form.Item>
-    ) : (
-      <div
-        className="editable-cell-value-wrap"
-        style={{
-          paddingRight: 24,
-        }}
-        onClick={toggleEdit}
-      >
-        {children}
-      </div>
-    );
-  }
-
-  return <td {...restProps}>{childNode}</td>;
+          {/* {inputNode} */}
+        </Form.Item>
+      ) : (
+        children
+      )}
+    </td>
+  );
 };
 
 //메인 메서드
@@ -203,9 +142,9 @@ const AlgoTable = () => {
     if (study_date === null || grade === null || original_id === null) {
       alert('빈 칸이 있으면 안됨, 다 채우기');
     }
-    //데이터 서버에 보내기
     dispatch(requestUpdateGrid({ study_date, grade, original_id, stat }));
-    // console.log({ study_date, grade, original_id, stat });
+    console.log({ study_date, grade, original_id, stat });
+    console.log(insertData.length);
     setVisible(false);
   };
 
@@ -214,18 +153,39 @@ const AlgoTable = () => {
     setVisible(false);
   };
 
+  // 수정하려고 선택한 key 값=> 여기서는 dailyno 값
+  const isEditing = dailyno;
+  // console.log(`editing ${editingKey}`);
+  //수정하기
+  const handleEdit = (d) => {
+    form.setFieldsValue({
+      study_date: '',
+      grade: '',
+      original_id: '',
+      stat: 'D',
+      dailyno: d.target.value,
+    });
+
+    console.log(d.target.value);
+    setStat('D');
+    setDailyno(Number(d.target.value));
+  };
+  const ecancel = () => {
+    setDailyno('');
+  };
+
   // 전체 저장
   const handleSave = (row) => {
-    // setData({ study_date, grade, original_id, dailyno, stat, row });
-    const newData = [columns.dataIndex];
-    console.log('뉴데이타', newData);
-    const index = newData.findIndex((item) => row.dailyno === item.dailyno);
-    console.log('인덱스' + index);
+    setData({ study_date, grade, original_id, dailyno, stat, row });
+    // const newData = [dataSource];
+    console.log('뉴데이타', study_date, grade, original_id, dailyno, stat);
 
-    const item = newData[index];
-    newData.splice(index, 1, { ...item, ...row });
-    setData({
-      dataIndex: newData,
+    const index = setData.findIndex((item) => row.dailyno === item.dailyno);
+    console.log('인덱스' + index);
+    const item = setData[index];
+    setData.splice(index, 1, { ...item, ...row });
+    this.setState({
+      dataSource: setData,
     });
   };
 
@@ -253,12 +213,29 @@ const AlgoTable = () => {
         dataIndex: 'study_date',
         align: 'center',
         editable: true,
+        render: (date) => (
+          <DatePicker
+            defaultValue={moment(date, dateFormat)}
+            format={dateFormat}
+          />
+        ),
       },
       {
         title: '학년',
         dataIndex: 'grade',
         align: 'center',
         editable: true,
+        render: (grade) => (
+          <Select
+            labelInValue
+            defaultValue={{ value: grade }}
+            onChange={handleGrade}
+          >
+            <Option value="7">7</Option>
+            <Option value="8">8</Option>
+            <Option value="9">9</Option>
+          </Select>
+        ),
       },
 
       {
@@ -293,9 +270,9 @@ const AlgoTable = () => {
     ],
     [EditableRow]
   );
-  //수정된 컬럼명을 맵 돌려서 확인
+  //셀 실시간 수정 되게-input
   const mergedColumns = columns.map((col) => {
-    // console.log(col);
+    console.log(col);
     if (!col.editable) {
       return col;
     }
@@ -303,10 +280,9 @@ const AlgoTable = () => {
       ...col,
       onCell: (dailyno) => ({
         dailyno,
-        editable: col.editable,
         dataIndex: col.dataIndex,
         title: col.title,
-        handleSave: handleSave,
+        editing: isEditing,
       }),
     };
   });
@@ -341,7 +317,7 @@ const AlgoTable = () => {
           <Input placeholder="내용" value={original_id} onChange={dataChange} />
         </Input.Group>
       </Modal>
-
+      {/* <Button onClick={handleSubmit} type="primary">변경사항 저장</Button> */}
       <StyledTable
         columns={mergedColumns}
         dataSource={viewGrid}
