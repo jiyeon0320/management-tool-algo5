@@ -55,105 +55,6 @@ const EditableRow = ({ index, ...props }) => {
   );
 };
 
-const EditableCell = ({
-  dailyno,
-  title,
-  editable,
-  children,
-  dataIndex,
-  handleSave,
-  ...restProps
-}) => {
-  const [editing, setEditing] = useState(false);
-  // const inputRef = useRef();
-  const form = useContext(EditableContext);
-
-  //객체가 출력됨
-  // console.log(dailyno);
-  useEffect(() => {
-    if (editing) {
-      inputRef.current.focus();
-    }
-  }, [editing]);
-
-  //클릭으로 데이터 수정 가능하게 하는 기능
-  const toggleEdit = () => {
-    setEditing(!editing);
-    form.setFieldsValue({
-      [dataIndex]: dailyno[dataIndex],
-    });
-  };
-
-  const save = async (e) => {
-    try {
-      const values = await form.validateFields();
-      toggleEdit();
-      handleSave({ ...dailyno, ...values });
-    } catch (errInfo) {
-      console.log('Save failed:', errInfo);
-    }
-  };
-
-  let childNode = children;
-  let inputDate = (study_date) => (
-    <DatePicker
-      defaultValue={moment(study_date, dateFormat)}
-      format={dateFormat}
-    />
-  );
-  if (editable) {
-    childNode = editing ? (
-      <Form.Item
-        style={{
-          margin: 0,
-        }}
-        name={dataIndex}
-        rules={[
-          {
-            required: true,
-            message: `${title} is required.`,
-          },
-        ]}
-      >
-        {/*         
-        /*** 1째 칸은{' '}
-        <DatePicker
-          defaultValue={moment(study_date, dateFormat)}
-          ref={inputRef}
-          format={dateFormat}
-          onBlur={save}
-          onPressEnter={save}
-        />
-        2번째는 
-        <Select
-          labelInValue
-          defaultValue={{ value: grade }}
-          ref={inputRef}
-          onChange={handleGrade}
-        >
-          <Option value="7">7</Option>
-          <Option value="8">8</Option>
-          <Option value="9">9</Option>
-        </Select>
-        3번째는
-        <Input ref={inputRef} onPressEnter={save} onBlur={save} /> */}
-      </Form.Item>
-    ) : (
-      <div
-        className="editable-cell-value-wrap"
-        style={{
-          paddingRight: 24,
-        }}
-        onClick={toggleEdit}
-      >
-        {children}
-      </div>
-    );
-  }
-
-  return <td {...restProps}>{childNode}</td>;
-};
-
 //메인 메서드
 const AlgoTable = () => {
   const [form] = Form.useForm();
@@ -194,6 +95,7 @@ const AlgoTable = () => {
   };
   // 내용 수정
   const dataChange = (e) => {
+    console.log(e.target.value);
     setOriginal_id(e.target.value);
   };
 
@@ -244,6 +146,109 @@ const AlgoTable = () => {
   const cancel = () => {
     message.error('삭제 취소');
     setVisible(false);
+  };
+
+  // 데이터 수정하기
+  const EditableCell = ({
+    dailyno,
+    title,
+    editable,
+    children,
+    dataIndex,
+    handleSave,
+    ...restProps
+  }) => {
+    const [editing, setEditing] = useState(false);
+    // const inputRef = useRef();
+    const form = useContext(EditableContext);
+
+    //객체가 출력됨
+    // console.log(dailyno);
+    // useEffect(() => {
+    //   if (editing) {
+    //     inputRef.current.focus();
+    //   }
+    // }, [editing]);
+
+    //클릭으로 데이터 수정 가능하게 하는 기능
+    const toggleEdit = () => {
+      setEditing(!editing);
+      form.setFieldsValue({
+        [dataIndex]: dailyno[dataIndex],
+      });
+    };
+
+    const save = async (e) => {
+      try {
+        const values = await form.validateFields();
+        console.log(values);
+        toggleEdit();
+        handleSave({ ...dailyno, ...values });
+      } catch (errInfo) {
+        console.log('Save failed:', errInfo);
+      }
+    };
+
+    let childNode = children;
+
+    if (editable) {
+      childNode = editing ? (
+        <Form.Item
+          style={{
+            margin: 0,
+          }}
+          name={dataIndex}
+          rules={[
+            {
+              required: true,
+              message: `${title} is required.`,
+            },
+          ]}
+        >
+          {dataIndex === 'study_date' && (
+            <DatePicker
+              defaultValue={moment(study_date, dateFormat)}
+              format={dateFormat}
+              onChange={handleDate}
+              onBlur={save}
+              onPressEnter={save}
+            />
+          )}
+          {dataIndex === 'grade' && (
+            <Select
+              labelInValue
+              // defaultValue={grade}
+              onChange={handleGrade}
+            >
+              <Option>학년</Option>
+              <Option value="7">7</Option>
+              <Option value="8">8</Option>
+              <Option value="9">9</Option>
+            </Select>
+          )}
+          {dataIndex === 'original_id' && (
+            <Input
+              value={original_id}
+              onPressEnter={save}
+              onBlur={save}
+              onChange={dataChange}
+            />
+          )}
+        </Form.Item>
+      ) : (
+        <div
+          className="editable-cell-value-wrap"
+          style={{
+            paddingRight: 24,
+          }}
+          onClick={toggleEdit}
+        >
+          {children}
+        </div>
+      );
+    }
+
+    return <td {...restProps}>{childNode}</td>;
   };
 
   const columns = useMemo(
