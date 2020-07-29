@@ -42,6 +42,36 @@ import { requestUpdateGrid, requestViewGrid } from '../actions';
 const { Option } = Select;
 const dateFormat = 'YYYY-MM-DD';
 
+/******** */
+const sampleData = [
+  {
+    study_date: '2222-22-22',
+    grade: 8,
+    original_id: 'ddddd',
+    dailyno: 1,
+  },
+  {
+    study_date: '2222-22-22',
+    grade: 7,
+    original_id: 'ddddd',
+    dailyno: 2,
+  },
+  {
+    study_date: '2222-22-22',
+    grade: 8,
+    original_id: 'ddddd',
+    dailyno: 3,
+  },
+  {
+    study_date: '2222-22-22',
+    grade: 8,
+    original_id: 'ddddd',
+    dailyno: 4,
+  },
+];
+
+/******** */
+
 const EditableContext = React.createContext();
 
 const EditableRow = ({ index, ...props }) => {
@@ -376,7 +406,7 @@ const AlgoTable = () => {
 
       <StyledTable
         columns={mergedColumns}
-        dataSource={viewGrid}
+        dataSource={sampleData}
         bordered
         components={{
           body: {
