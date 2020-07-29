@@ -1,0 +1,15 @@
+
+const toggle =()=>{
+    여기에 
+    data 값 가져오고
+    setData로 상태 바꾸고 싶을 때
+}
+
+
+const MAIN =() =>(
+    const [data, setData] = useState('');
+    return(
+        <></>
+    )
+)
+export default MAIN;
