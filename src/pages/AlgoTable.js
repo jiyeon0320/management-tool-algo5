@@ -313,6 +313,7 @@ console.log(index);
                       components={{
                         body: {
                           cell: EditableCell,
+                          row: EditableRow,
                         },
                       }}
                       pagination={{
