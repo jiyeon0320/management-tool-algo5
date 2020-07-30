@@ -1,0 +1,42 @@
+A.js
+
+- 디스패치를 통해 데이터 불러옴.
+{id: ddf, num:2 }
+
+const [dailyno, setDailyno] = useState();
+
+const A =()=>{
+    const columns= [{
+         title: '삭제',
+        dataIndex: 'dailyno',
+        align: 'center',
+        render: (dailyno) => <DeletePop name="dailyno" value={dailyno} />,
+    }]
+    return(
+        ...
+    )
+}
+
+
+
+
+------------------------------------------------
+
+DeletePop.js
+const DeletePop =({여기에 A파일의 dailyno 받아서})=>{
+
+    //A파일에 useState로 dailyno 세팅했는데 
+    여기에 setdailyno을 할 수 없는지?
+
+
+ const onClick=({여기에 전달})=>{
+     setDailyno(선택한 dailyno);
+     디스패치(삭제 액션 고고, )
+ }
+
+    return(
+        <popup>
+            <button value={dailyno을 받아오고 싶음} onClick={onClick}> 삭제 </button>
+        </popup>
+    )
+}
