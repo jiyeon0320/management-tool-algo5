@@ -5,6 +5,7 @@ import React, {
   createContext,
   useRef,
   useContext,
+  useMemo,
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -16,15 +17,11 @@ import {
   Select,
   Modal,
   message,
-  InputNumber,
   Popconfirm,
-  Pagination,
 } from 'antd';
 import styled from '@emotion/styled';
 import moment from 'moment';
 import { requestUpdateGrid, requestViewGrid } from '../actions';
-
-//****** edit 셀을 더블클릭하면 되게 한다.  */
 
 /*
 ## goal
@@ -45,10 +42,14 @@ import { requestUpdateGrid, requestViewGrid } from '../actions';
 const { Option } = Select;
 const dateFormat = 'YYYY-MM-DD';
 
-const EditableContext = React.createContext();
+const EditableContext = createContext();
 
 const EditableRow = ({ index, ...props }) => {
+  console.log(index);
   const [form] = Form.useForm();
+  console.log(form);
+  // dispatch(requestUpdateGrid({ study_date, grade, original_id, stat }));
+
   return (
     <Form form={form} component={false}>
       <EditableContext.Provider value={form}>
@@ -59,72 +60,37 @@ const EditableRow = ({ index, ...props }) => {
 };
 
 const EditableCell = ({
-  title,
-  editable,
-  children,
-  dataIndex,
   dailyno,
-  handleSave,
+  editing,
+  dataIndex,
+  title,
+  inputType,
+  index,
+  children,
   ...restProps
 }) => {
-  const [editing, setEditing] = useState(false);
-  const inputRef = useRef();
-  const form = useContext(EditableContext);
-  useEffect(() => {
-    if (editing) {
-      inputRef.current.focus();
-    }
-  }, [editing]);
-
-  const toggleEdit = () => {
-    setEditing(!editing);
-    form.setFieldsValue({
-      [dataIndex]: dailyno[dataIndex],
-    });
-  };
-
-  const save = async (e) => {
-    try {
-      const values = await form.validateFields();
-      toggleEdit();
-      handleSave({ ...dailyno, ...values });
-    } catch (errInfo) {
-      console.log('Save failed:', errInfo);
-    }
-  };
-
-  let childNode = children;
-
-  if (editable) {
-    childNode = editing ? (
-      <Form.Item
-        style={{
-          margin: 0,
-        }}
-        name={dataIndex}
-        rules={[
-          {
-            required: true,
-            message: `${title} is required.`,
-          },
-        ]}
-      >
-        <Input ref={inputRef} onPressEnter={save} onBlur={save} />
-      </Form.Item>
-    ) : (
-      <div
-        className="editable-cell-value-wrap"
-        style={{
-          paddingRight: 24,
-        }}
-        onClick={toggleEdit}
-      >
-        {children}
-      </div>
-    );
-  }
-
-  return <td {...restProps}>{childNode}</td>;
+  return (
+    <td {...restProps}>
+      {editing ? (
+        <Form.Item
+          name={dataIndex}
+          style={{
+            margin: 0,
+          }}
+          rules={[
+            {
+              required: true,
+              message: `Please Input ${title}!`,
+            },
+          ]}
+        >
+          {/* {inputNode} */}
+        </Form.Item>
+      ) : (
+        children
+      )}
+    </td>
+  );
 };
 
 //메인 메서드
@@ -162,7 +128,8 @@ const AlgoTable = () => {
   };
   //학년 수정하기
   const handleGrade = (grade) => {
-    setGrade(Number(grade.target.value));
+    console.log(grade.value);
+    setGrade(Number(grade.value));
   };
   // 내용 수정
   const dataChange = (e) => {
@@ -206,25 +173,20 @@ const AlgoTable = () => {
   const ecancel = () => {
     setDailyno('');
   };
-  const onEditSave = async (dailyno) => {
-    try {
-      const row = await form.validateFields();
-      const newData = [...data];
-      const index = newData.findIndex((item) => dailyno === item.dailyno);
 
-      if (index > -1) {
-        const item = newData[index];
-        newData.splice(index, 1, { ...item, ...row });
-        setData(newData);
-        setDailyno('');
-      } else {
-        newData.push(row);
-        setData(newData);
-        setDailyno('');
-      }
-    } catch (errInfo) {
-      console.log('Validate Failed:', errInfo);
-    }
+  // 전체 저장
+  const handleSave = (row) => {
+    setData({ study_date, grade, original_id, dailyno, stat, row });
+    // const newData = [dataSource];
+    console.log('뉴데이타', study_date, grade, original_id, dailyno, stat);
+
+    const index = setData.findIndex((item) => row.dailyno === item.dailyno);
+    console.log('인덱스' + index);
+    const item = setData[index];
+    setData.splice(index, 1, { ...item, ...row });
+    this.setState({
+      dataSource: setData,
+    });
   };
 
   //삭제
@@ -237,82 +199,101 @@ const AlgoTable = () => {
     dispatch(requestUpdateGrid({ dailyno, stat }));
     console.log(`번호: ${dailyno} / 상태: ${stat}`);
     message.success('삭제 성공');
+    setVisible(false);
   };
   const cancel = () => {
     message.error('삭제 취소');
+    setVisible(false);
   };
 
-  const columns = [
-    {
-      title: '등록일자',
-      dataIndex: 'study_date',
-      align: 'center',
-      editable: true,
-    },
-    {
-      title: '학년',
-      dataIndex: 'grade',
-      align: 'center',
-      editable: true,
-    },
-    {
-      title: '내용',
-      dataIndex: 'original_id',
-      align: 'center',
-      editable: true,
-    },
-    {
-      title: '번호',
-      dataIndex: 'dailyno',
-      align: 'center',
-    },
-    {
-      title: '수정',
-      dataIndex: 'dailyno',
-      align: 'center',
-      render: (row, dailyno) => {
-        const editable = isEditing;
-        console.log(isEditing);
-        return editable ? (
-          <span>
-            <button value={dailyno} onClick={onEditSave}>
-              저장
-            </button>
-            <Popconfirm title="Sure to cancel?" onConfirm={ecancel}>
-              <button>취소</button>
-            </Popconfirm>
-          </span>
-        ) : (
-          <button value={dailyno} onClick={handleEdit}>
-            수정
-          </button>
-        );
+  const columns = useMemo(
+    () => [
+      {
+        title: '등록일자',
+        dataIndex: 'study_date',
+        align: 'center',
+        editable: true,
+        render: (date) => (
+          <DatePicker
+            defaultValue={moment(date, dateFormat)}
+            format={dateFormat}
+          />
+        ),
       },
-    },
-    {
-      title: '삭제',
-      dataIndex: 'dailyno',
-      align: 'center',
-      render: (dailyno) => (
-        <Popconfirm
-          title="Sure to delete?"
-          onConfirm={confirm}
-          onCancel={cancel}
-          okText="Yes"
-          cancelText="No"
-        >
-          <button value={dailyno} onClick={handleDelete}>
-            Delete
-          </button>
-        </Popconfirm>
-      ),
-    },
-  ];
+      {
+        title: '학년',
+        dataIndex: 'grade',
+        align: 'center',
+        editable: true,
+        render: (grade) => (
+          <Select
+            labelInValue
+            defaultValue={{ value: grade }}
+            onChange={handleGrade}
+          >
+            <Option value="7">7</Option>
+            <Option value="8">8</Option>
+            <Option value="9">9</Option>
+          </Select>
+        ),
+      },
+
+      {
+        title: '내용',
+        dataIndex: 'original_id',
+        align: 'center',
+        editable: true,
+      },
+      {
+        title: '번호',
+        dataIndex: 'dailyno',
+        align: 'center',
+      },
+      {
+        title: '삭제',
+        dataIndex: 'dailyno',
+        align: 'center',
+        render: (dailyno) => (
+          <Popconfirm
+            title="Sure to delete?"
+            onConfirm={confirm}
+            onCancel={cancel}
+            okText="Yes"
+            cancelText="No"
+          >
+            <button value={dailyno} onClick={handleDelete}>
+              Delete
+            </button>
+          </Popconfirm>
+        ),
+      },
+    ],
+    [EditableRow]
+  );
+  //셀 실시간 수정 되게-input
+  const mergedColumns = columns.map((col) => {
+    console.log(col);
+    if (!col.editable) {
+      return col;
+    }
+    return {
+      ...col,
+      onCell: (dailyno) => ({
+        dailyno,
+        dataIndex: col.dataIndex,
+        title: col.title,
+        editing: isEditing,
+      }),
+    };
+  });
 
   return (
     <div>
       <Button type="primary" onClick={showModal}>
         데이터 추가
+      </Button>
+      <Button type="primary" onClick={handleSave}>
+        수정 저장
       </Button>
       <Modal
         title="데이터 입력하기"
@@ -324,28 +305,34 @@ const AlgoTable = () => {
       >
         <Input.Group compact>
           <DatePicker onChange={handleDate} />
-          <select onChange={handleGrade}>
-            <option value="">학년</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-          </select>
+          <Select
+            labelInValue
+            defaultValue={{ value: grade }}
+            onChange={handleGrade}
+          >
+            <Option value="7">7</Option>
+            <Option value="8">8</Option>
+            <Option value="9">9</Option>
+          </Select>
           <Input placeholder="내용" value={original_id} onChange={dataChange} />
         </Input.Group>
       </Modal>
       {/* <Button onClick={handleSubmit} type="primary">변경사항 저장</Button> */}
-      <Form form={form} component={false}>
-        <StyledTable
-          columns={columns}
-          dataSource={viewGrid}
-          bordered
-          rowClassName={() => 'editable-row'}
-          components={components}
-          pagination={{
-            onChange: ecancel,
-          }}
-        />
-      </Form>
+      <StyledTable
+        columns={mergedColumns}
+        dataSource={viewGrid}
+        bordered
+        components={{
+          body: {
+            cell: EditableCell,
+            row: EditableRow,
+          },
+        }}
+        rowClassName={() => 'editable-row'}
+        pagination={{
+          onChange: true,
+        }}
+      />
     </div>
   );
 };
