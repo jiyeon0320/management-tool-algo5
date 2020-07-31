@@ -1,17 +1,19 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# 운영툴 - Grid Table(Frontend)
 
-# 운영툴 - Grid Table
+## 1. 프로젝트 개요
+    # A. 프로젝트 스택
+    - Language: HTML, CSS, 
+    - Framework: React.js
+    - State Management: Redux
+## 2. 프로젝트 이론
+## 3. 마무리
 
 
-In the project directory, you can run:
-
-### `yarn start`
 
 Runs the app in the development mode.<br />
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
 
 
 ### useState
