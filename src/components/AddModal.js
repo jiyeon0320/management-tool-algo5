@@ -8,15 +8,13 @@ const dateFormat = 'YYYY-MM-DD';
 
 /** 입력 */
 
-const AddModal = (props) => {
-    console.log(props);
+const AddModal = () => {
+    // console.log(props);
     const [visible, setVisible] = useState(false);
     const [stat, setStat] = useState('I');
-    const [inputs, setInputs] = useState({
-        study_date: '',
-        grade: '',
-        original_id: '',
-    });
+    const [study_date, setStudy_date] = useState('');
+    const [grade, setGrade] = useState('');
+    const [original_id, setOriginal_id] = useState('');
     const dispatch = useDispatch();
 
     //데이터 추가 버튼 클릭 -> 모달 창 오픈
@@ -24,21 +22,34 @@ const AddModal = (props) => {
         setVisible(true);
     };
 
-    const handleChange = (e, dateString) => {
-        console.log(e, dateString);
-        // const { name, value } = e.target;
-        // setInputs({
-        //     ...inputs,
-        //     [name]: value,
-        // });
+    //날짜
+    const handleDate = (e, dateString) => {
+        console.log(dateString);
+        setStudy_date(dateString);
     };
 
+    //학년
+    const handleGrade = (e) => {
+        setGrade(e.value);
+    };
+
+    //내용
+    const handleId = (e) => {
+        setOriginal_id(e.target.value);
+    };
+
+    //저장 버튼 클릭!
     const handleOk = () => {
         console.log('ok');
-        // dispatch(requestUpdateGrid({ study_date, grade, original_id, stat }));
-        dispatch(requestUpdateGrid({ inputs, stat }));
+        if (study_date === '' || grade === '' || original_id === '') {
+            alert('빈 칸이 있으면 안됨, 다 채우기');
+            return;
+        }
+        dispatch(requestUpdateGrid({ study_date, grade, original_id, stat }));
         setVisible(false);
     };
+
+    //데이터 입력 취소
     const handleCancel = () => {
         console.log('cancel');
         setVisible(false);
@@ -57,27 +68,18 @@ const AddModal = (props) => {
                 value="I"
             >
                 <Input.Group compact>
-                    <DatePicker
-                        format={dateFormat}
-                        name={inputs.study_date}
-                        onChange={handleChange}
-                    />
+                    <DatePicker format={dateFormat} name={study_date} onChange={handleDate} />
                     <Select
-                        // name={grade}
+                        name={grade}
                         labelInValue
-                        defaultValue="학년"
-                        onChange={handleChange}
+                        defaultValue={{ value: '학년' }}
+                        onChange={handleGrade}
                     >
                         <Option value="7">7</Option>
                         <Option value="8">8</Option>
                         <Option value="9">9</Option>
                     </Select>
-                    <Input
-                        placeholder="내용"
-                        // name={original_id}
-                        // value={original_id}
-                        onChange={handleChange}
-                    />
+                    <Input placeholder="내용" name={original_id} onChange={handleId} />
                 </Input.Group>
             </Modal>
         </div>

@@ -3,7 +3,7 @@ import React, { useEffect, useState, createContext, useRef, useContext, useMemo 
 import { useDispatch, useSelector } from 'react-redux';
 import { Table, Input, Button, Form, DatePicker, Select, Modal, message, Popconfirm } from 'antd';
 import styled from '@emotion/styled';
-// import moment from 'moment';
+import moment from 'moment';
 import { requestUpdateGrid, requestViewGrid } from '../actions';
 // import sampleData from './SampleData';
 import DeletePop from '../components/DeletePop';
@@ -37,6 +37,7 @@ const EditableRow = ({ index, ...props }) => {
     return (
         <Form form={form} component={false}>
             <EditableContext.Provider value={form}>
+                {/* 데이터 내용 출력 */}
                 <tr {...props} />
             </EditableContext.Provider>
         </Form>
@@ -44,10 +45,8 @@ const EditableRow = ({ index, ...props }) => {
 };
 
 //메인 메서드
-const AlgoTable = (sampleData) => {
-    const [form] = Form.useForm();
+const AlgoTable = () => {
     const viewGrid = useSelector((state) => state.viewGrid); //기존 데이터 출력
-    console.log(viewGrid);
     const [visible, setVisible] = useState(false);
     const [study_date, setStudy_date] = useState();
     const [grade, setGrade] = useState();
@@ -67,12 +66,6 @@ const AlgoTable = (sampleData) => {
     const dataCount = viewGrid.length;
     console.log(dataCount);
 
-    //데이터 추가 버튼 클릭 -> 모달 창 오픈
-    const showModal = () => {
-        setVisible(true);
-        setStat('I'); //insert
-    };
-
     //날짜 입력- DatePicker 사용
     const handleDate = (date, dateString) => {
         console.log(`date: ${date}, dateString: ${dateString}`);
@@ -87,22 +80,6 @@ const AlgoTable = (sampleData) => {
     const dataChange = (e) => {
         console.log(e.target.value);
         setOriginal_id(e.target.value);
-    };
-
-    //모달 ok 버튼 누르기
-    const handleOk = () => {
-        if (study_date === null || grade === null || original_id === null) {
-            alert('빈 칸이 있으면 안됨, 다 채우기');
-        }
-        //데이터 서버에 보내기
-        dispatch(requestUpdateGrid({ study_date, grade, original_id, stat }));
-        // console.log({ study_date, grade, original_id, stat });
-        setVisible(false);
-    };
-    //모달 내 취소 버튼
-    const handleCancel = () => {
-        console.log('모달 데이터 입력 취소');
-        setVisible(false);
     };
 
     // 수정 데이터 저장
@@ -123,23 +100,6 @@ const AlgoTable = (sampleData) => {
 
         // 서버로 보내기
         dispatch(requestUpdateGrid({ study_date, grade, original_id, stat, dailyno }));
-    };
-
-    // //삭제
-    const handleDelete = (d) => {
-        console.log(d.target.value);
-        setStat('D');
-        setDailyno(Number(d.target.value));
-    };
-    const confirm = () => {
-        dispatch(requestUpdateGrid({ dailyno, stat }));
-        console.log(`번호: ${dailyno} / 상태: ${stat}`);
-        message.success('삭제 성공');
-        setVisible(false);
-    };
-    const cancel = () => {
-        message.error('삭제 취소');
-        setVisible(false);
     };
 
     /********************************************************** */
@@ -174,11 +134,9 @@ const AlgoTable = (sampleData) => {
         const toggleEdit = (index) => {
             console.log(dataIndex);
             console.log(dailyno.dailyno);
+            console.log(dailyno[dataIndex]);
 
             console.log(`인덱스::: ${index}`);
-            // setStudy_date(dailyno.study_date);
-            // setGrade(dailyno.grade);
-            // setOriginal_id(dailyno.original_id);
             setDailyno(dailyno.dailyno);
             setStat('U');
             setEditing(!editing);
@@ -187,14 +145,13 @@ const AlgoTable = (sampleData) => {
             });
         };
 
-        const save = async (e) => {
+        const save = (e) => {
             try {
-                const values = form.validateFields();
                 setOriginal_id(e.target.value);
                 toggleEdit();
-                console.log('dddd' + e.target.value);
-
-                // handleSave({ ...dailyno, ...values });
+                console.log('dddd;;;' + e.target.value);
+                // handleDate();
+                handleSave({ ...dailyno, ...dataIndex });
             } catch (errInfo) {
                 console.log('Save failed:', errInfo);
             }
@@ -209,11 +166,10 @@ const AlgoTable = (sampleData) => {
                         style={{
                             margin: 0,
                         }}
-                        name={dataIndex}
                     >
                         {dataIndex === 'study_date' && (
                             <DatePicker
-                                // defaultValue={moment(study_date, dateFormat)}
+                                // defaultValue={study_date}
                                 format={dateFormat}
                                 onChange={handleDate}
                                 onPressEnter={save}
@@ -224,7 +180,7 @@ const AlgoTable = (sampleData) => {
                         {dataIndex === 'grade' && (
                             <Select
                                 labelInValue
-                                defaultValue="학년"
+                                defaultValue={{ value: '학년' }}
                                 onPressEnter={save}
                                 onChange={handleGrade}
                             >
@@ -242,13 +198,11 @@ const AlgoTable = (sampleData) => {
                                 onPressEnter={save}
                             />
                         )}
-                        {/* </Form.Item>
-                    <Form.Item name={dataIndex.dailyno}> */}
-                        {dataIndex === 'dailyno' && <Input value={dailyno} onPressEnter={save} />}
+
+                        {dataIndex === 'dailyno' && <Input value={dailyno} />}
                     </Form.Item>
                 </div>
             ) : (
-                // </Form.Item>
                 <div
                     className="editable-cell-value-wrap"
                     style={{
@@ -299,11 +253,11 @@ const AlgoTable = (sampleData) => {
                 render: (dailyno) => <DeletePop dailyno={dailyno} />,
             },
         ],
-        [EditableCell]
+        [EditableRow, EditableCell]
     );
-    //수정된 컬럼명을 맵 돌려서 확인
+
+    //컬럼명을 맵 돌려서 확인
     const mergedColumns = columns.map((col) => {
-        // console.log(col);
         if (!col.editable) {
             return col;
         }
@@ -319,37 +273,45 @@ const AlgoTable = (sampleData) => {
         };
     });
 
+    const SampleData = [
+        {
+            study_date: '2222-22-22',
+            grade: 8,
+            original_id: 'ddddd',
+            dailyno: 1,
+        },
+        {
+            study_date: '2222-22-22',
+            grade: 7,
+            original_id: 'ddddd',
+            dailyno: 2,
+        },
+        {
+            study_date: '2222-22-22',
+            grade: 8,
+            original_id: 'ddddd',
+            dailyno: 3,
+        },
+        {
+            study_date: '2222-22-22',
+            grade: 8,
+            original_id: 'ddddd',
+            dailyno: 4,
+        },
+    ];
+
     return (
         <div>
-            {/* <Button type="primary" onClick={showModal}>
-                데이터 추가
-            </Button> */}
-            <AddModal stat="I" study_date="" grade="" original_id="" />
+            {/* 데이터 추가 */}
+            <AddModal stat="I" />
             <Button type="primary" onClick={handleSave}>
                 수정 저장
             </Button>
-            {/* <Modal
-                title="데이터 입력하기"
-                visible={visible}
-                onOk={handleOk}
-                onCancel={handleCancel}
-                value="I"
-                // confirmLoading={confirmLoading}
-            >
-                <Input.Group compact>
-                    <DatePicker onChange={handleDate} />
-                    <Select labelInValue defaultValue={{ value: grade }} onChange={handleGrade}>
-                        <Option value="7">7</Option>
-                        <Option value="8">8</Option>
-                        <Option value="9">9</Option>
-                    </Select>
-                    <Input placeholder="내용" value={original_id} onChange={dataChange} />
-                </Input.Group>
-            </Modal> */}
 
             <StyledTable
                 columns={mergedColumns}
-                dataSource={viewGrid}
+                // dataSource={viewGrid}
+                dataSource={SampleData}
                 bordered
                 components={{
                     body: {

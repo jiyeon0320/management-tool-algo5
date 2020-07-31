@@ -10,8 +10,6 @@ const DeletePop = (props) => {
     const dispatch = useDispatch();
     //삭제
     const handleDelete = (d) => {
-        console.log(d.target);
-        console.log(props.dailyno);
         setStat('D');
         setDailyno(props.dailyno);
     };
