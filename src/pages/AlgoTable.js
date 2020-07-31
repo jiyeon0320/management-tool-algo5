@@ -15,13 +15,6 @@ import AddModal from '../components/AddModal';
 - 셀에 더블클릭하면 수정 가능
 - 체크 박스로 여러개 선택 후 일괄 삭제 가능
 - 마지막에 save 버튼 누르면 최종적으로 변경된 사항들 모두 저장
-
-## current
-- 데이터 추가 버튼 누르면 모달창으로 데이터 입력 서버 전송 가능
-
-- 페이징대로 데이터가 출력되지 않음. (study_date, grade) render 기능을 사용한 열에 한해서 발생됨
--  
-
 */
 
 const { Option } = Select;
@@ -84,7 +77,7 @@ const AlgoTable = () => {
 
     // 수정 데이터 저장
     // 수정된 dailyno가 받아와지는 확인해봐야 함
-    const handleSave = (row) => {
+    const handleSave = () => {
         // const newData = [columns.dataIndex];
         const newData = { study_date, original_id, dailyno, stat, grade };
         console.log('뉴데이타', newData);
@@ -99,7 +92,7 @@ const AlgoTable = () => {
         // });
 
         // 서버로 보내기
-        dispatch(requestUpdateGrid({ study_date, grade, original_id, stat, dailyno }));
+        // dispatch(requestUpdateGrid({ study_date, grade, original_id, stat, dailyno }));
     };
 
     /********************************************************** */
@@ -167,37 +160,43 @@ const AlgoTable = () => {
                             margin: 0,
                         }}
                     >
-                        {dataIndex === 'study_date' && (
-                            <DatePicker
-                                // defaultValue={study_date}
-                                format={dateFormat}
-                                onChange={handleDate}
-                                onPressEnter={save}
-                            />
-                        )}
+                        {
+                            (dataIndex = 'study_date' && (
+                                <DatePicker
+                                    // defaultValue={(moment(study_date), dateFormat)}
+                                    format={dateFormat}
+                                    onChange={handleDate}
+                                    onPressEnter={save}
+                                />
+                            ))
+                        }
                         {/* </Form.Item>
                     <Form.Item name={dataIndex.grade}> */}
-                        {dataIndex === 'grade' && (
-                            <Select
-                                labelInValue
-                                defaultValue={{ value: '학년' }}
-                                onPressEnter={save}
-                                onChange={handleGrade}
-                            >
-                                <Option value="7">7</Option>
-                                <Option value="8">8</Option>
-                                <Option value="9">9</Option>
-                            </Select>
-                        )}
+                        {
+                            (dataIndex = 'grade' && (
+                                <Select
+                                    labelInValue
+                                    defaultValue={{ value: '학년' }}
+                                    onPressEnter={save}
+                                    onChange={handleGrade}
+                                >
+                                    <Option value="7">7</Option>
+                                    <Option value="8">8</Option>
+                                    <Option value="9">9</Option>
+                                </Select>
+                            ))
+                        }
                         {/* </Form.Item>
                     <Form.Item name={dataIndex.original_id}> */}
-                        {dataIndex === 'original_id' && (
-                            <Input
-                                // value={original_id}
-                                // onBlur={save}
-                                onPressEnter={save}
-                            />
-                        )}
+                        {
+                            (dataIndex = 'original_id' && (
+                                <Input
+                                    value={original_id}
+                                    // onBlur={save}
+                                    onPressEnter={save}
+                                />
+                            ))
+                        }
 
                         {dataIndex === 'dailyno' && <Input value={dailyno} />}
                     </Form.Item>
@@ -273,33 +272,6 @@ const AlgoTable = () => {
         };
     });
 
-    const SampleData = [
-        {
-            study_date: '2222-22-22',
-            grade: 8,
-            original_id: 'ddddd',
-            dailyno: 1,
-        },
-        {
-            study_date: '2222-22-22',
-            grade: 7,
-            original_id: 'ddddd',
-            dailyno: 2,
-        },
-        {
-            study_date: '2222-22-22',
-            grade: 8,
-            original_id: 'ddddd',
-            dailyno: 3,
-        },
-        {
-            study_date: '2222-22-22',
-            grade: 8,
-            original_id: 'ddddd',
-            dailyno: 4,
-        },
-    ];
-
     return (
         <div>
             {/* 데이터 추가 */}
@@ -310,8 +282,8 @@ const AlgoTable = () => {
 
             <StyledTable
                 columns={mergedColumns}
-                // dataSource={viewGrid}
-                dataSource={SampleData}
+                dataSource={viewGrid}
+                // dataSource={SampleData}
                 bordered
                 components={{
                     body: {
