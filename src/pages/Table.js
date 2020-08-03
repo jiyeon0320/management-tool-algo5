@@ -36,8 +36,29 @@ function Editable() {
     //     { name: 'Zerya Betül', surname: 'Baran', birthYear: 2017, birthCity: 34 },
     // ]);
 
-    //데이터 보내기
+    //데이터 추가
     const onRowAdd = (e) => {
+        console.log(e);
+        console.log(e.study_date);
+        console.log(e.grade);
+        console.log(e.value);
+        console.log(e.field);
+        const { study_date, grade, original_id, stat } = data;
+        setData(
+            ...data,
+            (study_date: e.study_date),
+            (grade: e.grade),
+            (original_id: e.original_id),
+            (stat: 'I')
+        );
+        dispatch(requestUpdateGrid({ study_date, grade, original_id }));
+    };
+    //데이터 수정
+    const onRowUpdate = (e) => {
+        console.log(e);
+    };
+    //데이터 삭제
+    const onRowDelete = (e) => {
         console.log(e);
     };
 
@@ -64,28 +85,8 @@ function Editable() {
             data={viewGrid}
             editable={{
                 onRowAdd: onRowAdd,
-                onRowUpdate: (newData, oldData) =>
-                    new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            const dataUpdate = [...data];
-                            const index = oldData.tableData.id;
-                            dataUpdate[index] = newData;
-                            setData([...dataUpdate]);
-
-                            resolve();
-                        }, 1000);
-                    }),
-                onRowDelete: (oldData) =>
-                    new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            const dataDelete = [...data];
-                            const index = oldData.tableData.id;
-                            dataDelete.splice(index, 1);
-                            setData([...dataDelete]);
-
-                            resolve();
-                        }, 1000);
-                    }),
+                onRowUpdate: onRowUpdate,
+                onRowDelete: onRowDelete,
             }}
         />
     );
